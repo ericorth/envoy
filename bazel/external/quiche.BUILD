@@ -2975,6 +2975,19 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "quiche_common_callbacks",
+    hdrs = ["quiche/common/quiche_callbacks.h"],
+    copts = quiche_copts,
+    repository = "@envoy",
+    tags = ["nofips"],
+    deps = [
+        ":quiche_common_platform_export",
+        "@com_google_absl//absl/functional:any_invocable",
+        "@com_google_absl//absl/functional:function_ref",
+    ],
+)
+
+envoy_cc_library(
     name = "quic_core_data_lib",
     srcs = [
         "quiche/quic/core/quic_data_reader.cc",
@@ -3614,6 +3627,7 @@ envoy_cc_library(
         ":quic_core_syscall_wrapper_lib",
         ":quic_core_types_lib",
         ":quic_platform",
+        ":quiche_common_callbacks",
     ],
 )
 
@@ -4271,6 +4285,7 @@ envoy_cc_library(
         ":quic_platform",
         ":quic_server_crypto_crypto_handshake_lib",
         ":quic_stream_priority_lib",
+        ":quiche_common_callbacks",
         ":quiche_common_structured_headers_lib",
         ":quiche_common_text_utils_lib",
         ":spdy_core_protocol_lib",
@@ -5715,6 +5730,7 @@ envoy_cc_library(
     repository = "@envoy",
     tags = ["nofips"],
     deps = [
+        ":quiche_common_callbacks",
         ":quiche_common_platform_export",
         ":quiche_common_platform_lower_case_string",
         "@com_google_absl//absl/strings",
