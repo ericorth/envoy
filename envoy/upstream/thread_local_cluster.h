@@ -168,6 +168,8 @@ public:
   tcpAsyncClient(LoadBalancerContext* context,
                  Tcp::AsyncTcpClientOptionsConstSharedPtr options) PURE;
 
+  virtual Udp::DatagramHost datagramHost(Udp::DatagramCallbacks& callbacks) PURE;
+
   /**
    * @return the thread local cluster drop_overload configuration.
    */
