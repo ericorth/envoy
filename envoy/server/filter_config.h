@@ -346,6 +346,17 @@ public:
                                Server::Configuration::UpstreamFactoryContext& context) PURE;
 };
 
+class NamedUpstreamDatagramHostSessionFilterFactory : public Envoy::Config::TypedFactory {
+public:
+  ~NamedUpstreamDatagramHostSessionFilterFactory() override = default;
+
+  virtual absl::StatusOr<Network::UpstreamDatagramHostSessionFilterFactoryCb>
+  createFilterFactoryFromProto(const Protobuf::Message& config,
+                               UpstreamFactoryContext& context) PURE;
+
+  std::string category() const override { return "envoy.filters.upstream_datagram_host"; }
+};
+
 } // namespace Configuration
 } // namespace Server
 } // namespace Envoy

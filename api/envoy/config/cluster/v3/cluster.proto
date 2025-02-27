@@ -45,7 +45,7 @@ message ClusterCollection {
 }
 
 // Configuration for a single upstream cluster.
-// [#next-free-field: 59]
+// [#next-free-field: 60]
 message Cluster {
   option (udpa.annotations.versioning).previous_message_type = "envoy.api.v2.Cluster";
 
@@ -1175,6 +1175,13 @@ message Cluster {
   // The chain will be applied to all outgoing connections that Envoy makes to the upstream
   // servers of this cluster.
   repeated Filter filters = 40;
+
+  // An (optional) network filter chain for datagram (e.g. UDP) sessions, listed in the order the
+  // filters should be applied. The chain will be applied to all datagram sessions created using
+  // this cluster, but note that it is common in Envoy to directly create UDP sockets to hosts
+  // identified by clusters rather than having the cluster create the session and this filter chain
+  // will not be applied to datagrams sent/received using such UDP sockets.
+  repeated DatagramFilter datagram_filters = 59;
 
   // If this field is set and is supported by the client, it will supersede the value of
   // :ref:`lb_policy<envoy_v3_api_field_config.cluster.v3.Cluster.lb_policy>`.

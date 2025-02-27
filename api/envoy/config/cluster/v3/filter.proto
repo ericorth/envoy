@@ -17,8 +17,8 @@ option go_package = "github.com/envoyproxy/go-control-plane/envoy/config/cluster
 option (udpa.annotations.file_status).package_version_status = ACTIVE;
 
 // [#protodoc-title: Upstream network filters]
-// Upstream network filters apply to the connections to the upstream cluster hosts.
 
+// Upstream network filters apply to the connections to the upstream cluster hosts.
 message Filter {
   option (udpa.annotations.versioning).previous_message_type = "envoy.api.v2.cluster.Filter";
 
@@ -35,6 +35,23 @@ message Filter {
   // Configuration source specifier for an extension configuration discovery
   // service. In case of a failure and without the default configuration, the
   // listener closes the connections.
+  // Only one of typed_config or config_discovery can be used.
+  core.v3.ExtensionConfigSource config_discovery = 3;
+}
+
+// Upstream network filters that apply to datagram (e.g. UDP) sessions to the upstream cluster
+// hosts.
+message DatagramFilter {
+  // The name of the filter configuration.
+  string name = 1 [(validate.rules).string = {min_len: 1}];
+
+  // Filter specific configuration which depends on the filter being
+  // instantiated. See the supported filters for further documentation.
+  // Only one of typed_config or config_discovery can be used.
+  google.protobuf.Any typed_config = 2;
+
+  // Configuration source specifier for an extension configuration discovery
+  // service.
   // Only one of typed_config or config_discovery can be used.
   core.v3.ExtensionConfigSource config_discovery = 3;
 }

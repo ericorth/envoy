@@ -942,5 +942,57 @@ public:
   virtual const Address::Instance& remoteAddress() const PURE;
 };
 
+using UpstreamDatagramHostSessionFilterFactoryCb =
+    std::function<void(UpstreamDatagramHostSessionFilterManager& filter_manager)>;
+
+class UpstreamDatagramHostSessionFilterManager {
+public:
+  virtual ~UpstreamDatagramHostSessionFilterManager() = default;
+
+  virtual HostConstSharedPtr getHost() const PURE;
+
+  virtual void addReadFilter(UpstreamDatagramHostSessionReadFilterSharedPtr filter) PURE;
+  virtual void addWriteFilter(UpstreamDatagramHostSessionWriteFilterSharedPtr filter) PURE;
+  virtual void addFilter(UpstreamDatagramHostSessionFilterSharedPtr filter) PURE;
+};
+
+class UpstreamDatagramHostSessionFilter : public virtual UpstreamDatagramHostSessionReadFilter,
+                                          public virtual UpstreamDatagramHostSessionWriteFilter {};
+
+using UpstreamDatagramHostSessionFilterSharedPtr =
+    std::shared_ptr<UpstreamDatagramHostSessionFilter>;
+
+class UpstreamDatagramHostSessionReadFilter : public virtual UdpSessionFilterBase {
+public:
+  ~UpstreamDatagramHostSessionReadFilter() override = default;
+
+  virtual UdpSessionReadFilterStatus onRead(UdpRecvData& data) PURE;
+  virtual UdpSessionReadFilterStatus onReceiveError(Api::IoError::IoErrorCode error_code) PURE;
+  virtual void initializeReadFilterCallbacks(
+      UpstreamDatagramhostSessionReadFilterCallbacks* filter_callbacks) PURE;
+};
+
+using UpstreamDatagramHostSessionReadFilterSharedPtr =
+    std::shared_ptr<UpstreamDatagramHostSessionReadFilter>;
+
+class UpstreamDatagramHostSessionReadFilterCallbacks : public UdpSessionFilterCallbacks {}
+
+class UpstreamDatagramHostSessionWriteFilter : public virtual UdpSessionFilterBase {
+public:
+  ~UpstreamDatagramHostSessionWriteFilter() override = default;
+
+  virtual UdpSessionWriteFilterStatus onWrite(UdpRecvData& data) PURE;
+  virtual void initializeWriteFilterCallbacks(
+      UpstreamDatagramHostSessionWriteFilterCallbacks* filter_callbacks) PURE;
+};
+
+using UpstreamDatagramHostSessionWriteFilterSharedPtr =
+    std::shared_ptr<UpstreamDatagramHostSessionWriteFilter>;
+
+class UpstreamDatagramHostSessionWriteFilterCallbacks : public UdpSessionFilterCallbacks {
+public:
+  virtual void readData(UdpRecvData& data) PURE;
+};
+
 } // namespace Network
 } // namespace Envoy
