@@ -162,6 +162,17 @@ envoy_cc_test(
 )
 
 envoy_cc_test(
+    name = "datagram_host_impl_test",
+    srcs = ["datagram_host_impl_test.cc"],
+    deps = [
+        ":utility_lib",
+        "//source/common/upstream:datagram_host_impl_lib",
+        "//test/mocks/upstream:cluster_info_mocks",
+        "//test/test_common:simulated_time_system_lib",
+    ],
+)
+
+envoy_cc_test(
     name = "wrsq_scheduler_test",
     srcs = ["wrsq_scheduler_test.cc"],
     rbe_pool = "6gig",

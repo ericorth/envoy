@@ -169,6 +169,18 @@ envoy_cc_library(
 )
 
 envoy_cc_library(
+    name = "datagram_host_impl_lib",
+    srcs = ["datagram_host_impl.cc"],
+    hdrs = ["datagram_host_impl.h"],
+    deps = [
+        "//envoy/network:filter_interface",
+        "//envoy/network:listener_interface",
+        "//envoy/upstream:thread_local_cluster_interface",
+        "//source/common/common:linked_object",
+    ],
+)
+
+envoy_cc_library(
     name = "priority_conn_pool_map",
     hdrs = ["priority_conn_pool_map.h"],
     deps = [

@@ -1,6 +1,7 @@
 #include "source/common/network/udp_packet_writer_handler_impl.h"
 
 #include "source/common/buffer/buffer_impl.h"
+#include "source/common/common/assert.h"
 #include "source/common/network/utility.h"
 
 namespace Envoy {

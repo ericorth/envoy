@@ -633,3 +633,13 @@ envoy_cc_library(
         "//envoy/network:filter_interface",
     ],
 )
+
+envoy_cc_library(
+    name = "upstream_udp_socket_filter_lib",
+    srcs = ["upstream_udp_socket_filter.cc"],
+    hdrs = ["upstream_udp_socket_filter.h"],
+    deps = [
+        "//envoy/network:filter_interface",
+        "//envoy/upstream:upstream_interface",
+    ],
+)

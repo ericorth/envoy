@@ -26,6 +26,11 @@ namespace Event {
 class Dispatcher;
 }
 
+namespace Upstream {
+class Host;
+using HostConstSharedPtr = std::shared_ptr<const Host>;
+}
+
 namespace Network {
 
 class Connection;
@@ -942,57 +947,70 @@ public:
   virtual const Address::Instance& remoteAddress() const PURE;
 };
 
-using UpstreamDatagramHostSessionFilterFactoryCb =
-    std::function<void(UpstreamDatagramHostSessionFilterManager& filter_manager)>;
-
-class UpstreamDatagramHostSessionFilterManager {
+class UpstreamDatagramHostFilterCallbacksBase {
 public:
-  virtual ~UpstreamDatagramHostSessionFilterManager() = default;
+  virtual ~UpstreamDatagramHostFilterCallbacksBase() = default;
 
-  virtual HostConstSharedPtr getHost() const PURE;
-
-  virtual void addReadFilter(UpstreamDatagramHostSessionReadFilterSharedPtr filter) PURE;
-  virtual void addWriteFilter(UpstreamDatagramHostSessionWriteFilterSharedPtr filter) PURE;
-  virtual void addFilter(UpstreamDatagramHostSessionFilterSharedPtr filter) PURE;
+  /**
+   * Allows a filter to inject a datagram to successive filters in the filter chain. The injected
+   * datagram will be iterated as a regular received datagram, and may also be stopped by further
+   * filters. This can be used, for example, to continue processing previously buffered datagrams by
+   * a filter after an asynchronous operation ended.
+   */
+  virtual void injectDatagramToFilterChain(UdpRecvData& data) PURE;
 };
 
-class UpstreamDatagramHostSessionFilter : public virtual UpstreamDatagramHostSessionReadFilter,
-                                          public virtual UpstreamDatagramHostSessionWriteFilter {};
+class UpstreamDatagramHostReadFilterCallbacks : public UpstreamDatagramHostFilterCallbacksBase {};
 
-using UpstreamDatagramHostSessionFilterSharedPtr =
-    std::shared_ptr<UpstreamDatagramHostSessionFilter>;
-
-class UpstreamDatagramHostSessionReadFilter : public virtual UdpSessionFilterBase {
+class UpstreamDatagramHostReadFilter {
 public:
-  ~UpstreamDatagramHostSessionReadFilter() override = default;
+  virtual ~UpstreamDatagramHostReadFilter() = default;
 
-  virtual UdpSessionReadFilterStatus onRead(UdpRecvData& data) PURE;
-  virtual UdpSessionReadFilterStatus onReceiveError(Api::IoError::IoErrorCode error_code) PURE;
+  virtual FilterStatus onRead(UdpRecvData& data) PURE;
+  virtual FilterStatus onReceiveError(Api::IoError::IoErrorCode error_code) PURE;
   virtual void initializeReadFilterCallbacks(
-      UpstreamDatagramhostSessionReadFilterCallbacks* filter_callbacks) PURE;
+      UpstreamDatagramHostReadFilterCallbacks* filter_callbacks) PURE;
 };
 
-using UpstreamDatagramHostSessionReadFilterSharedPtr =
-    std::shared_ptr<UpstreamDatagramHostSessionReadFilter>;
+using UpstreamDatagramHostReadFilterSharedPtr = std::shared_ptr<UpstreamDatagramHostReadFilter>;
 
-class UpstreamDatagramHostSessionReadFilterCallbacks : public UdpSessionFilterCallbacks {}
-
-class UpstreamDatagramHostSessionWriteFilter : public virtual UdpSessionFilterBase {
-public:
-  ~UpstreamDatagramHostSessionWriteFilter() override = default;
-
-  virtual UdpSessionWriteFilterStatus onWrite(UdpRecvData& data) PURE;
-  virtual void initializeWriteFilterCallbacks(
-      UpstreamDatagramHostSessionWriteFilterCallbacks* filter_callbacks) PURE;
-};
-
-using UpstreamDatagramHostSessionWriteFilterSharedPtr =
-    std::shared_ptr<UpstreamDatagramHostSessionWriteFilter>;
-
-class UpstreamDatagramHostSessionWriteFilterCallbacks : public UdpSessionFilterCallbacks {
-public:
+class UpstreamDatagramHostWriteFilterCallbacks : public UpstreamDatagramHostFilterCallbacksBase {
+  public:
   virtual void readData(UdpRecvData& data) PURE;
 };
+
+class UpstreamDatagramHostWriteFilter {
+public:
+  virtual ~UpstreamDatagramHostWriteFilter() = default;
+
+  virtual FilterStatus onWrite(UdpRecvData& data) PURE;
+  virtual void initializeWriteFilterCallbacks(
+      UpstreamDatagramHostWriteFilterCallbacks* filter_callbacks) PURE;
+};
+
+using UpstreamDatagramHostWriteFilterSharedPtr =
+    std::shared_ptr<UpstreamDatagramHostWriteFilter>;
+
+class UpstreamDatagramHostFilter : public virtual UpstreamDatagramHostReadFilter,
+                                   public virtual UpstreamDatagramHostWriteFilter {
+ public:
+  ~UpstreamDatagramHostFilter() override = default;
+};
+
+using UpstreamDatagramHostFilterSharedPtr = std::shared_ptr<UpstreamDatagramHostFilter>;
+
+class UpstreamDatagramHostFilterManager {
+  public:
+  virtual ~UpstreamDatagramHostFilterManager() = default;
+
+  virtual const Upstream::HostConstSharedPtr& host() const PURE;
+  virtual void addReadFilter(UpstreamDatagramHostReadFilterSharedPtr filter) PURE;
+  virtual void addWriteFilter(UpstreamDatagramHostWriteFilterSharedPtr filter) PURE;
+  virtual void addFilter(UpstreamDatagramHostFilterSharedPtr filter) PURE;
+};
+
+using UpstreamDatagramHostFilterFactoryCb =
+    std::function<void(UpstreamDatagramHostFilterManager& filter_manager)>;
 
 } // namespace Network
 } // namespace Envoy

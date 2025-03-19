@@ -70,19 +70,22 @@ private:
   Tcp::ConnectionPool::Instance* pool_;
 };
 
-// Per-session handler for sending datagrams to the upstream host, using configured upstream
+// Handler for sending and receiving datagrams to/from the upstream host, using configured upstream
 // datagram networking filters.
-class DatagramHostSession {
+class DatagramHost {
 public:
   class Callbacks {
   public:
+    virtual ~Callbacks() = default;
     virtual void onDatagramRead(Network::UdpRecvData& data) PURE;
   };
+
+  virtual ~DatagramHost() = default;
 
   virtual void write(Network::UdpRecvData& data) PURE;
 };
 
-using DatagramHostSessionPtr = std::unique_ptr<DatagramHostSession>;
+using DatagramHostPtr = std::unique_ptr<DatagramHost>;
 
 /**
  * A thread local cluster instance that can be used for direct load balancing and host set
@@ -182,8 +185,8 @@ public:
   tcpAsyncClient(LoadBalancerContext* context,
                  Tcp::AsyncTcpClientOptionsConstSharedPtr options) PURE;
 
-  virtual DatagramHostSessionPtr datagramHostSession(
-      HostConstSharedPtr host, DatagramHostSession::Callbacks* callbacks) PURE;
+  virtual DatagramHostPtr datagramHost(
+      HostConstSharedPtr host, DatagramHost::Callbacks* callbacks) PURE;
 
   /**
    * @return the thread local cluster drop_overload configuration.
