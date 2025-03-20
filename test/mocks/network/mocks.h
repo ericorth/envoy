@@ -698,6 +698,32 @@ public:
   MOCK_METHOD(void, addReadFilter_, (Network::UdpListenerReadFilterPtr&));
 };
 
+class MockUpstreamDatagramHostFilter : public UpstreamDatagramHostFilter {
+public:
+  MockUpstreamDatagramHostFilter();
+  ~MockUpstreamDatagramHostFilter() override = default;
+
+  MOCK_METHOD(FilterStatus, onRead, (UdpRecvData&));
+  MOCK_METHOD(FilterStatus, onReceiveError, (Api::IoError::IoErrorCode));
+  MOCK_METHOD(void, initializeReadFilterCallbacks, (UpstreamDatagramHostReadFilterCallbacks*));
+  MOCK_METHOD(FilterStatus, onWrite, (UdpRecvData&));
+  MOCK_METHOD(void, initializeWriteFilterCallbacks, (UpstreamDatagramHostWriteFilterCallbacks*));
+
+  UpstreamDatagramHostReadFilterCallbacks& read_callbacks() { return *read_callbacks_; }
+  void set_read_callbacks(UpstreamDatagramHostReadFilterCallbacks* read_callbacks) {
+    read_callbacks_ = read_callbacks;
+  }
+
+  UpstreamDatagramHostWriteFilterCallbacks& write_callbacks() { return *write_callbacks_; }
+  void set_write_callbacks(UpstreamDatagramHostWriteFilterCallbacks* write_callbacks) {
+    write_callbacks_ = write_callbacks;
+  }
+
+private:
+  UpstreamDatagramHostReadFilterCallbacks* read_callbacks_ = nullptr;
+  UpstreamDatagramHostWriteFilterCallbacks* write_callbacks_ = nullptr;
+};
+
 class MockConnectionBalancer : public ConnectionBalancer {
 public:
   MockConnectionBalancer();

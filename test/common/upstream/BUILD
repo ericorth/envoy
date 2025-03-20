@@ -167,8 +167,10 @@ envoy_cc_test(
     deps = [
         ":utility_lib",
         "//source/common/upstream:datagram_host_impl_lib",
+        "//test/mocks/network:network_mocks",
         "//test/mocks/upstream:cluster_info_mocks",
         "//test/test_common:simulated_time_system_lib",
+        "@com_google_absl//absl/functional:bind_front",
     ],
 )
 

@@ -235,6 +235,11 @@ MockUdpListenerReadFilter::~MockUdpListenerReadFilter() = default;
 MockUdpListenerFilterManager::MockUdpListenerFilterManager() = default;
 MockUdpListenerFilterManager::~MockUdpListenerFilterManager() = default;
 
+MockUpstreamDatagramHostFilter::MockUpstreamDatagramHostFilter() {
+  ON_CALL(*this, initializeReadFilterCallbacks(_)).WillByDefault(SaveArg<0>(&read_callbacks_));
+  ON_CALL(*this, initializeWriteFilterCallbacks(_)).WillByDefault(SaveArg<0>(&write_callbacks_));
+}
+
 MockConnectionBalancer::MockConnectionBalancer() = default;
 MockConnectionBalancer::~MockConnectionBalancer() = default;
 
