@@ -88,9 +88,11 @@ RUNTIME_GUARD(envoy_reloadable_features_quic_upstream_reads_fixed_number_packets
 RUNTIME_GUARD(envoy_reloadable_features_quic_upstream_socket_use_address_cache_for_read);
 RUNTIME_GUARD(envoy_reloadable_features_report_load_with_rq_issued);
 RUNTIME_GUARD(envoy_reloadable_features_report_stream_reset_error_code);
+RUNTIME_GUARD(envoy_reloadable_features_router_filter_resetall_on_local_reply);
 RUNTIME_GUARD(envoy_reloadable_features_sanitize_sni_in_access_log);
 RUNTIME_GUARD(envoy_reloadable_features_shadow_policy_inherit_trace_sampling);
 RUNTIME_GUARD(envoy_reloadable_features_skip_dns_lookup_for_proxied_requests);
+RUNTIME_GUARD(envoy_reloadable_features_skip_ext_proc_on_local_reply);
 RUNTIME_GUARD(envoy_reloadable_features_streaming_shadow);
 RUNTIME_GUARD(envoy_reloadable_features_tcp_proxy_retry_on_different_event_loop);
 RUNTIME_GUARD(envoy_reloadable_features_tcp_tunneling_send_downstream_fin_on_upstream_trailers);
@@ -168,8 +170,6 @@ FALSE_RUNTIME_GUARD(envoy_reloadable_features_allow_multiplexed_upstream_half_cl
 
 // TODO(renjietang): Flip to true after prod testing.
 FALSE_RUNTIME_GUARD(envoy_reloadable_features_use_network_type_socket_option);
-// TODO(fredyw): Remove after prod testing.
-FALSE_RUNTIME_GUARD(envoy_reloadable_features_dns_nodata_noname_is_success);
 // TODO(abeyad): Evaluate and either remove or make a config knob in
 // https://github.com/envoyproxy/envoy/blob/main/api/envoy/extensions/transport_sockets/tls/v3/tls.proto#L29.
 FALSE_RUNTIME_GUARD(envoy_reloadable_features_quic_disable_client_early_data);

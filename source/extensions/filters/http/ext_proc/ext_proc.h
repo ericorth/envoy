@@ -466,6 +466,28 @@ public:
   void onComplete(envoy::service::ext_proc::v3::ProcessingResponse& response) override;
   void onError() override;
 
+  void onProcessHeadersResponse(const envoy::service::ext_proc::v3::HeadersResponse& response,
+                                absl::Status status,
+                                envoy::config::core::v3::TrafficDirection traffic_direction);
+  void onProcessTrailersResponse(const envoy::service::ext_proc::v3::TrailersResponse& response,
+                                 absl::Status status,
+                                 envoy::config::core::v3::TrafficDirection traffic_direction);
+  void onProcessBodyResponse(const envoy::service::ext_proc::v3::BodyResponse& response,
+                             absl::Status status,
+                             envoy::config::core::v3::TrafficDirection traffic_direction);
+
+  Envoy::Http::LocalErrorStatus
+  onLocalReply(const Envoy::Http::StreamFilterBase::LocalReplyData&) override {
+    if (Runtime::runtimeFeatureEnabled("envoy.reloadable_features.skip_ext_proc_on_local_reply")) {
+      ENVOY_STREAM_LOG(debug,
+                       "When onLocalReply() is called, set processing_complete_ to true to skip "
+                       "external processing",
+                       *decoder_callbacks_);
+      processing_complete_ = true;
+    }
+    return ::Envoy::Http::LocalErrorStatus::Continue;
+  }
+
 private:
   void mergePerRouteConfig();
   StreamOpenState openStream();
@@ -515,6 +537,8 @@ private:
 
   void sendRequest(envoy::service::ext_proc::v3::ProcessingRequest&& req, bool end_stream);
 
+  void encodeProtocolConfig(envoy::service::ext_proc::v3::ProcessingRequest& req);
+
   const FilterConfigSharedPtr config_;
   const ClientBasePtr client_;
   ExtProcFilterStats stats_;
@@ -549,6 +573,9 @@ private:
 
   // Set to true when the mergePerRouteConfig() method has been called.
   bool route_config_merged_ = false;
+
+  // If true, the protocol configurations are already sent to the server.
+  bool protocol_config_encoded_ = false;
 };
 
 extern std::string responseCaseToString(
