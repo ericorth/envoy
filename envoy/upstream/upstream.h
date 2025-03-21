@@ -18,6 +18,7 @@
 #include "envoy/http/filter_factory.h"
 #include "envoy/http/header_validator.h"
 #include "envoy/network/connection.h"
+#include "envoy/network/listener.h"
 #include "envoy/network/transport_socket.h"
 #include "envoy/ssl/context.h"
 #include "envoy/stats/scope.h"
@@ -635,6 +636,23 @@ public:
   virtual void batchHostUpdate(BatchUpdateCb& callback) PURE;
 };
 
+// Handler for sending and receiving datagrams to/from an upstream host, using configured upstream
+// datagram networking filters.
+class DatagramHost {
+  public:
+  class Callbacks {
+    public:
+    virtual ~Callbacks() = default;
+    virtual void onDatagramRead(Network::UdpRecvData& data) PURE;
+  };
+
+  virtual ~DatagramHost() = default;
+
+  virtual void write(Network::UdpRecvData& data) PURE;
+};
+
+using DatagramHostPtr = std::unique_ptr<DatagramHost>;
+
 /**
  * All cluster config update related stats.
  * See https://github.com/envoyproxy/envoy/issues/23575 for details. Stats from ClusterInfo::stats()
@@ -1174,6 +1192,11 @@ public:
    * Create network filters on a new upstream connection.
    */
   virtual void createNetworkFilterChain(Network::Connection& connection) const PURE;
+
+  /**
+   * Create datagram network filters on a new upstream datagram handler.
+   */
+  virtual void createDatagramNetworkFilterChain(DatagramHost& datagramHost) const PURE;
 
   /**
    * Calculate upstream protocol(s) based on features.

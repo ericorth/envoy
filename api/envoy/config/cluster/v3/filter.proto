@@ -39,13 +39,13 @@ message Filter {
   core.v3.ExtensionConfigSource config_discovery = 3;
 }
 
-// Upstream network filters that apply to datagram (e.g. UDP) sessions to the upstream cluster
-// hosts.
+// Upstream network filters that apply to datagrams (e.g. UDP) sent and received to/from upstream
+// cluster hosts.
 message DatagramFilter {
   // The name of the filter configuration.
   string name = 1 [(validate.rules).string = {min_len: 1}];
 
-  // Filter specific configuration which depends on the filter being
+  // Filter-specific configuration which depends on the filter being
   // instantiated. See the supported filters for further documentation.
   // Only one of typed_config or config_discovery can be used.
   google.protobuf.Any typed_config = 2;
