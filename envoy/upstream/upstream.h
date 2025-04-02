@@ -1196,9 +1196,10 @@ public:
   virtual void createNetworkFilterChain(Network::Connection& connection) const PURE;
 
   /**
-   * Create datagram network filters on a new upstream datagram handler.
+   * Create datagram host network filters.
    */
-  virtual void createDatagramNetworkFilterChain(DatagramHost& datagramHost) const PURE;
+  virtual void createDatagramHostFilterChain(
+      Network::UpstreamDatagramHostFilterManager& manager) const PURE;
 
   /**
    * Calculate upstream protocol(s) based on features.

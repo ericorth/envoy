@@ -82,6 +82,12 @@ using UpstreamNetworkFilterConfigProviderManager =
     Filter::FilterConfigProviderManager<Network::FilterFactoryCb,
                                         Server::Configuration::UpstreamFactoryContext>;
 
+using UpstreamDatagramHostFilterConfigProviderManager =
+    Filter::FilterConfigProviderManager<Network::UpstreamDatagramHostFilterFactoryCb,
+                                        Server::Configuration::UpstreamFactoryContext>;
+using UpstreamDatagramHostFilterConfigProviderManagerSharedPtr =
+    std::shared_ptr<UpstreamDatagramHostFilterConfigProviderManager>;
+
 class LegacyLbPolicyConfigHelper {
 public:
   struct Result {
@@ -1018,6 +1024,8 @@ public:
   }
 
   void createNetworkFilterChain(Network::Connection&) const override;
+  void createDatagramHostFilterChain(
+      Network::UpstreamDatagramHostFilterManager& manager) const override;
   std::vector<Http::Protocol>
   upstreamHttpProtocol(absl::optional<Http::Protocol> downstream_protocol) const override;
 
@@ -1076,6 +1084,9 @@ private:
   std::shared_ptr<UpstreamNetworkFilterConfigProviderManager>
   createSingletonUpstreamNetworkFilterConfigProviderManager(
       Server::Configuration::ServerFactoryContext& context);
+  UpstreamDatagramHostFilterConfigProviderManagerSharedPtr
+  createSingletonUpstreamDatagramHostFilterConfigProviderManager(
+      Server::Configuration::ServerFactoryContext& context);
 
   struct ResourceManagers {
     ResourceManagers(const envoy::config::cluster::v3::Cluster& config, Runtime::Loader& runtime,
@@ -1098,6 +1109,10 @@ private:
     const ClusterTimeoutBudgetStatsPtr timeout_budget_stats_;
     const ClusterRequestResponseSizeStatsPtr request_response_size_stats_;
   };
+
+  absl::Status initializeDatagramFilterFactories(
+      const envoy::config::cluster::v3::Cluster& config,
+      Server::Configuration::ServerFactoryContext& server_context);
 
 #ifdef ENVOY_ENABLE_UHV
   ::Envoy::Http::HeaderValidatorStats& getHeaderValidatorStats(Http::Protocol protocol) const;
@@ -1146,7 +1161,9 @@ private:
   std::shared_ptr<Http::UpstreamFilterConfigProviderManager> http_filter_config_provider_manager_;
   std::shared_ptr<UpstreamNetworkFilterConfigProviderManager>
       network_filter_config_provider_manager_;
+  UpstreamDatagramHostFilterConfigProviderManagerSharedPtr datagram_filter_config_provider_manager_;
   Filter::NetworkFilterFactoriesList filter_factories_;
+  Filter::UpstreamDatagramHostFilterFactoriesList datagram_filter_factories_;
   Http::FilterChainUtility::FilterFactoriesList http_filter_factories_;
   mutable Http::Http1::CodecStats::AtomicPtr http1_codec_stats_;
   mutable Http::Http2::CodecStats::AtomicPtr http2_codec_stats_;

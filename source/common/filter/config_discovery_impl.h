@@ -291,6 +291,53 @@ public:
   }
 };
 
+class UpstreamDatagramHostDynamicFilterConfigProviderImpl
+    : public DynamicFilterConfigProviderImpl<Network::UpstreamDatagramHostFilterFactoryCb> {
+public:
+  UpstreamDatagramHostDynamicFilterConfigProviderImpl(
+      FilterConfigSubscriptionSharedPtr& subscription,
+      const absl::flat_hash_set<std::string>& require_type_urls,
+      Server::Configuration::ServerFactoryContext& server_context,
+      Server::Configuration::UpstreamFactoryContext& factory_context,
+      ProtobufTypes::MessagePtr default_config,
+      bool last_filter_in_filter_chain,
+      const std::string& filter_chain_type,
+      absl::string_view stat_prefix,
+      const Network::ListenerFilterMatcherSharedPtr& listener_filter_matcher)
+      : DynamicFilterConfigProviderImpl<Network::UpstreamDatagramHostFilterFactoryCb>(
+            subscription, require_type_urls, server_context.threadLocal(),
+            std::move(default_config), last_filter_in_filter_chain, filter_chain_type, stat_prefix,
+            listener_filter_matcher),
+        server_context_(server_context),
+        factory_context_(factory_context) {}
+
+  void validateMessage(const std::string& config_name, const Protobuf::Message& message,
+                       const std::string& factory_name) const override {
+    auto* factory =
+        Registry
+            ::FactoryRegistry<Server::Configuration::NamedUpstreamDatagramHostFilterConfigFactory>
+            ::getFactory(factory_name);
+    const bool is_terminal_filter = factory->isTerminalFilterByProto(message, server_context_);
+    THROW_IF_NOT_OK(Config::Utility::validateTerminalFilters(config_name, factory_name,
+                                                             filter_chain_type_,
+                                                             is_terminal_filter,
+                                                             last_filter_in_filter_chain_));
+  }
+
+private:
+  absl::StatusOr<Network::UpstreamDatagramHostFilterFactoryCb>
+  instantiateFilterFactory(const Protobuf::Message& message) const override {
+    auto* factory =
+        Registry
+            ::FactoryRegistry<Server::Configuration::NamedUpstreamDatagramHostFilterConfigFactory>
+            ::getFactoryByType(message.GetTypeName());
+    return factory->createFilterFactoryFromProto(message, factory_context_);
+  }
+
+  Server::Configuration::ServerFactoryContext& server_context_;
+  Server::Configuration::UpstreamFactoryContext& factory_context_;
+};
+
 // Implementation of a listener dynamic filter config provider.
 template <class FactoryCb>
 class ListenerDynamicFilterConfigProviderImpl : public DynamicFilterConfigProviderImpl<FactoryCb> {
@@ -777,6 +824,22 @@ protected:
   }
   const std::string getConfigDumpType() const override { return "ecds_filter_upstream_network"; }
 };
+
+class UpstreamDatagramHostFilterConfigProviderManagerImpl
+    : public FilterConfigProviderManagerImpl<
+          Server::Configuration::NamedUpstreamDatagramHostFilterConfigFactory,
+          Network::UpstreamDatagramHostFilterFactoryCb,
+          Server::Configuration::UpstreamFactoryContext,
+          UpstreamDatagramHostDynamicFilterConfigProviderImpl> {
+public:
+  absl::string_view statPrefix() const override { return "upstream_datagram_host."; }
+
+protected:
+  const std::string getConfigDumpType() const override {
+    return "ecds_filter_upstream_datagram_host";
+  }
+};
+
 
 // TCP listener filter
 class TcpListenerFilterConfigProviderManagerImpl

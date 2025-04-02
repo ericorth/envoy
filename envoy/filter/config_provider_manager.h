@@ -23,6 +23,9 @@ using DynamicFilterConfigProviderPtr = std::unique_ptr<DynamicFilterConfigProvid
 // Network filter config provider aliases
 using NetworkFilterFactoriesList = std::vector<FilterConfigProviderPtr<Network::FilterFactoryCb>>;
 
+using UpstreamDatagramHostFilterFactoriesList =
+    std::vector<FilterConfigProviderPtr<Network::UpstreamDatagramHostFilterFactoryCb>>;
+
 // Listener filter config provider aliases
 using ListenerFilterFactoriesList =
     std::vector<FilterConfigProviderPtr<Network::ListenerFilterFactoryCb>>;

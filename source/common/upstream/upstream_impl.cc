@@ -59,6 +59,7 @@
 #include "source/server/transport_socket_config_impl.h"
 
 #include "absl/container/node_hash_set.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 
 namespace Envoy {
@@ -1409,6 +1410,9 @@ ClusterInfoImpl::ClusterInfoImpl(
             callback, proto_config.name()));
   }
 
+  SET_AND_RETURN_IF_NOT_OK(initializeDatagramFilterFactories(config, server_context),
+                           creation_status);
+
   if (http_protocol_options_) {
     if (!http_protocol_options_->http_filters_.empty()) {
       creation_status = Http::FilterChainUtility::checkUpstreamHttpFiltersList(
@@ -1520,6 +1524,17 @@ void ClusterInfoImpl::createNetworkFilterChain(Network::Connection& connection) 
     if (config.has_value()) {
       Network::FilterFactoryCb& factory = config.value();
       factory(connection);
+    }
+  }
+}
+
+void ClusterInfoImpl::createDatagramHostFilterChain(
+    Network::UpstreamDatagramHostFilterManager& manager) const {
+  for (const auto& filter_config_provider : datagram_filter_factories_) {
+    auto config = filter_config_provider->config();
+    if (config.has_value()) {
+      Network::UpstreamDatagramHostFilterFactoryCb& factory = config.value();
+      factory(manager);
     }
   }
 }
@@ -2063,6 +2078,18 @@ ClusterInfoImpl::createSingletonUpstreamNetworkFilterConfigProviderManager(
       [] { return std::make_shared<Filter::UpstreamNetworkFilterConfigProviderManagerImpl>(); });
 }
 
+SINGLETON_MANAGER_REGISTRATION(upstream_datagram_host_filter_config_provider_manager);
+
+UpstreamDatagramHostFilterConfigProviderManagerSharedPtr
+ClusterInfoImpl::createSingletonUpstreamDatagramHostFilterConfigProviderManager(
+    Server::Configuration::ServerFactoryContext& context) {
+  return context.singletonManager().getTyped<UpstreamDatagramHostFilterConfigProviderManager>(
+      SINGLETON_MANAGER_REGISTERED_NAME(upstream_datagram_host_filter_config_provider_manager),
+      [] {
+        return std::make_shared<Filter::UpstreamDatagramHostFilterConfigProviderManagerImpl>();
+      });
+}
+
 absl::StatusOr<ResourceManagerImplPtr>
 ClusterInfoImpl::ResourceManagers::load(const envoy::config::cluster::v3::Cluster& config,
                                         Runtime::Loader& runtime, const std::string& cluster_name,
@@ -2136,6 +2163,56 @@ ClusterInfoImpl::ResourceManagers::load(const envoy::config::cluster::v3::Cluste
       ClusterInfoImpl::generateCircuitBreakersStats(stats_scope, priority_stat_name,
                                                     track_remaining, circuit_breakers_stat_names_),
       budget_percent, min_retry_concurrency);
+}
+
+absl::Status ClusterInfoImpl::initializeDatagramFilterFactories(
+    const envoy::config::cluster::v3::Cluster& config,
+    Server::Configuration::ServerFactoryContext& server_context) {
+  ASSERT(datagram_filter_factories_.empty());
+  datagram_filter_factories_.reserve(config.datagram_filters_size());
+  for (int i = 0; i < config.datagram_filters_size(); i++) {
+    const envoy::config::cluster::v3::DatagramFilter& proto_config = config.datagram_filters(i);
+    const bool is_last = i == config.datagram_filters_size() - 1;
+    ENVOY_LOG(debug, "  upstream datagram filter #{}:", i);
+
+    if (proto_config.has_config_discovery() && proto_config.has_typed_config()) {
+      return absl::InvalidArgumentError("Only one of typed_config or config_discovery can be used");
+    }
+
+    if (proto_config.has_config_discovery()) {
+      ENVOY_LOG(debug, "      dynamic filter name: {}", proto_config.name());
+      datagram_filter_factories_.push_back(
+          datagram_filter_config_provider_manager_->createDynamicFilterConfigProvider(
+              proto_config.config_discovery(), proto_config.name(), server_context,
+              upstream_context_, server_context.clusterManager(), is_last,
+              "upstream_datagram_host", nullptr));
+    } else {
+      ENVOY_LOG(debug, "    name: {}", proto_config.name());
+
+      auto& factory = Config::Utility::getAndCheckFactory<
+          Server::Configuration::NamedUpstreamDatagramHostFilterConfigFactory>(proto_config);
+      auto message = factory.createEmptyConfigProto();
+      RETURN_IF_NOT_OK(
+          Config::Utility::translateOpaqueConfig(
+              proto_config.typed_config(), server_context.messageValidationVisitor(), *message));
+
+      RETURN_IF_NOT_OK(Config::Utility::validateTerminalFilters(
+        proto_config.name(), factory.name(), "upstream_datagram_host",
+        factory.isTerminalFilterByProto(*message, server_context), is_last));
+
+      absl::StatusOr<Network::UpstreamDatagramHostFilterFactoryCb> callback =
+          factory.createFilterFactoryFromProto(*message, upstream_context_);
+      if (!callback.ok()) {
+        return callback.status();
+      }
+
+      datagram_filter_factories_.push_back(
+          datagram_filter_config_provider_manager_->createStaticFilterConfigProvider(
+              callback.value(), proto_config.name()));
+    }
+  }
+
+  return absl::OkStatus();
 }
 
 PriorityStateManager::PriorityStateManager(ClusterImplBase& cluster,

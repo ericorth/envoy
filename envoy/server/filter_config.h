@@ -214,6 +214,24 @@ public:
   }
 };
 
+class NamedUpstreamDatagramHostFilterConfigFactory : public Envoy::Config::TypedFactory {
+  public:
+  ~NamedUpstreamDatagramHostFilterConfigFactory() override = default;
+
+  virtual absl::StatusOr<Network::UpstreamDatagramHostFilterFactoryCb>
+  createFilterFactoryFromProto(const Protobuf::Message& config,
+                               UpstreamFactoryContext& context) PURE;
+
+  std::string category() const override { return "envoy.filters.upstream_datagram_host"; }
+
+  /**
+   * @return bool true if this filter must be the last filter in a filter chain, false otherwise.
+   */
+  virtual bool isTerminalFilterByProto(const Protobuf::Message&, ServerFactoryContext&) {
+    return false;
+  }
+};
+
 using FilterDependenciesPtr =
     std::unique_ptr<envoy::extensions::filters::common::dependency::v3::FilterDependencies>;
 using MatchingRequirementsPtr =
@@ -345,18 +363,6 @@ public:
   createFilterFactoryFromProto(const Protobuf::Message& config, const std::string& stat_prefix,
                                Server::Configuration::UpstreamFactoryContext& context) PURE;
 };
-
-//!!
-//class NamedUpstreamDatagramHostSessionFilterFactory : public Envoy::Config::TypedFactory {
-//public:
-//  ~NamedUpstreamDatagramHostSessionFilterFactory() override = default;
-//
-//  virtual absl::StatusOr<Network::UpstreamDatagramHostSessionFilterFactoryCb>
-//  createFilterFactoryFromProto(const Protobuf::Message& config,
-//                               UpstreamFactoryContext& context) PURE;
-//
-//  std::string category() const override { return "envoy.filters.upstream_datagram_host"; }
-//};
 
 } // namespace Configuration
 } // namespace Server
