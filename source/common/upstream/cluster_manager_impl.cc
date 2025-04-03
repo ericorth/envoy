@@ -1658,6 +1658,10 @@ ClusterManagerImpl::ThreadLocalClusterManagerImpl::ClusterEntry::tcpAsyncClient(
 
 DatagramHostPtr ClusterManagerImpl::ThreadLocalClusterManagerImpl::ClusterEntry::datagramHost(
     HostConstSharedPtr host, DatagramHost::Callbacks* callbacks) {
+  if (!host) {
+    return nullptr;
+  }
+
   return std::make_unique<DatagramHostImpl>(std::move(host), callbacks);
 }
 

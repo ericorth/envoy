@@ -42,7 +42,7 @@ public:
   MOCK_METHOD(Http::AsyncClient&, httpAsyncClient, ());
   MOCK_METHOD(Tcp::AsyncTcpClientPtr, tcpAsyncClient,
               (LoadBalancerContext * context, Tcp::AsyncTcpClientOptionsConstSharedPtr options));
-  MOCK_METHOD(DatagramHost, datagramHost, (HostConstSharedPtr, DatagramHost::Callbacks*));
+  MOCK_METHOD(DatagramHostPtr, datagramHost, (HostConstSharedPtr, DatagramHost::Callbacks*));
   MOCK_METHOD(UnitFloat, dropOverload, (), (const));
   MOCK_METHOD(const std::string&, dropCategory, (), (const));
   MOCK_METHOD(void, setDropOverload, (UnitFloat));

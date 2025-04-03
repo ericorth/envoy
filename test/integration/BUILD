@@ -616,6 +616,15 @@ envoy_cc_test(
 )
 
 envoy_cc_test(
+    name = "upstream_datagram_host_filter_integration_test",
+    size = "large",
+    srcs = ["upstream_datagram_host_filter_integration_test.cc"],
+    deps = [
+        ":integration_lib",
+    ],
+)
+
+envoy_cc_test(
     name = "upstream_http_filter_integration_test",
     size = "large",
     srcs = ["upstream_http_filter_integration_test.cc"],

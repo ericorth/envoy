@@ -157,7 +157,8 @@ public:
               alternateProtocolsCacheOptions, (), (const));
   MOCK_METHOD(const std::string&, edsServiceName, (), (const));
   MOCK_METHOD(void, createNetworkFilterChain, (Network::Connection&), (const));
-  MOCK_METHOD(void, createDatagramNetworkFilterChain, (DatagramHost&), (const));
+  MOCK_METHOD(void, createDatagramHostFilterChain, (Network::UpstreamDatagramHostFilterManager&),
+              (const));
   MOCK_METHOD(std::vector<Http::Protocol>, upstreamHttpProtocol, (absl::optional<Http::Protocol>),
               (const));
 
