@@ -82,6 +82,7 @@ envoy_cc_library(
     deps = [
         ":cds_api_lib",
         ":cluster_discovery_manager_lib",
+        ":datagram_host_impl_lib",
         ":host_utility_lib",
         ":load_balancer_context_base_lib",
         ":load_stats_reporter_lib",

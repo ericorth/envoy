@@ -40,6 +40,7 @@
 #include "source/common/tcp/conn_pool.h"
 #include "source/common/upstream/cds_api_impl.h"
 #include "source/common/upstream/cluster_factory_impl.h"
+#include "source/common/upstream/datagram_host_impl.h"
 #include "source/common/upstream/load_balancer_context_base.h"
 #include "source/common/upstream/priority_conn_pool_map_impl.h"
 
@@ -1653,6 +1654,11 @@ ClusterManagerImpl::ThreadLocalClusterManagerImpl::ClusterEntry::tcpAsyncClient(
     LoadBalancerContext* context, Tcp::AsyncTcpClientOptionsConstSharedPtr options) {
   return std::make_unique<Tcp::AsyncTcpClientImpl>(parent_.thread_local_dispatcher_, *this, context,
                                                    options->enable_half_close);
+}
+
+DatagramHostPtr ClusterManagerImpl::ThreadLocalClusterManagerImpl::ClusterEntry::datagramHost(
+    HostConstSharedPtr host, DatagramHost::Callbacks* callbacks) {
+  return std::make_unique<DatagramHostImpl>(std::move(host), callbacks);
 }
 
 void ClusterManagerImpl::ThreadLocalClusterManagerImpl::ClusterEntry::updateHosts(

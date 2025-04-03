@@ -602,6 +602,8 @@ private:
       Tcp::AsyncTcpClientPtr
       tcpAsyncClient(LoadBalancerContext* context,
                      Tcp::AsyncTcpClientOptionsConstSharedPtr options) override;
+      DatagramHostPtr datagramHost(HostConstSharedPtr host,
+                                   DatagramHost::Callbacks* callbacks) override;
 
       // Updates the hosts in the priority set.
       void updateHosts(const std::string& name, uint32_t priority,

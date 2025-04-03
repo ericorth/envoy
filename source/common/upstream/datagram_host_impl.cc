@@ -12,7 +12,9 @@
 namespace Envoy::Upstream {
 
 DatagramHostImpl::DatagramHostImpl(HostConstSharedPtr host, Callbacks* callbacks)
-  : host_(std::move(host)), callbacks_(callbacks) {}
+  : host_(std::move(host)), callbacks_(callbacks) {
+  host_->cluster().createDatagramHostFilterChain(*this);
+}
 
 void DatagramHostImpl::write(Network::UdpRecvData& data) {
   //!! logging/stats
